@@ -3,14 +3,22 @@ import telebot
 import threading
 import time
 from datetime import datetime
+from flask import Flask
+import os
 
 TOKEN = "7973299304:AAGLxm6rqTJlgSNkDYx_-osYeQk7ik-hEg8"
-CHAT_ID = -1001432031599  # Числом, Telebot нормально работает с int
+CHAT_ID = -1001432031599
 MESSAGE_ID = None
 
 FLIGHT_DATE = datetime(2025, 11, 2, 20, 40)
-
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
+
+# Фейковый веб-сервер для Render
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is running"
 
 def update_timer():
     global MESSAGE_ID
@@ -42,15 +50,13 @@ def update_timer():
 
         time.sleep(60)
 
-def start_timer_thread():
+def start_bot():
     t = threading.Thread(target=update_timer)
     t.daemon = True
     t.start()
-
-@bot.message_handler(commands=["start"])
-def start(message):
-    bot.reply_to(message, "✅ Таймер запущен! Сообщение закреплено и будет обновляться каждые 60 секунд.")
+    bot.infinity_polling()
 
 if __name__ == "__main__":
-    start_timer_thread()
-    bot.infinity_polling()
+    threading.Thread(target=start_bot).start()
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

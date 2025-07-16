@@ -1,1 +1,1 @@
-worker: python thailand_timer_bot.py
+web: python thailand_timer_bot.py
