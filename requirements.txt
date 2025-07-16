@@ -1,1 +1,2 @@
-pyTelegramBotAPI==4.27.0\nflask==3.0.3
+pyTelegramBotAPI==4.27.0
+flask==3.0.3
