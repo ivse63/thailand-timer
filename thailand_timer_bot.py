@@ -13,12 +13,12 @@ MESSAGE_ID = None
 FLIGHT_DATE = datetime(2025, 11, 2, 20, 40)
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
-# Фейковый веб-сервер для Render
+# Flask-сервер для Render (фиктивный, но обязательный)
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Bot is running"
+    return "Bot is running and updating countdown!"
 
 def update_timer():
     global MESSAGE_ID
