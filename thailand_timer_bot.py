@@ -7,21 +7,19 @@ from flask import Flask
 import os
 
 TOKEN = "7973299304:AAGLxm6rqTJlgSNkDYx_-osYeQk7ik-hEg8"
-CHAT_ID = -1001432031599
-MESSAGE_ID = None
-
 FLIGHT_DATE = datetime(2025, 11, 2, 20, 40)
-bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
-# Flask-сервер для Render (фиктивный, но обязательный)
+bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 app = Flask(__name__)
+
+# Словарь для хранения сообщений в разных чатах {chat_id: message_id}
+chat_messages = {}
 
 @app.route('/')
 def home():
-    return "Bot is running and updating countdown!"
+    return "Bot is running and updating countdown in multiple chats!"
 
 def update_timer():
-    global MESSAGE_ID
     while True:
         now = datetime.now()
         remaining = FLIGHT_DATE - now
@@ -38,17 +36,25 @@ def update_timer():
                 "🛫 Вылет: 2 ноября 2025, 20:40 (МСК)"
             )
 
-        try:
-            if MESSAGE_ID is None:
-                msg = bot.send_message(CHAT_ID, text)
-                MESSAGE_ID = msg.message_id
-                bot.pin_chat_message(CHAT_ID, MESSAGE_ID, disable_notification=True)
-            else:
-                bot.edit_message_text(text, CHAT_ID, MESSAGE_ID, parse_mode="HTML")
-        except Exception as e:
-            print(f"Ошибка обновления: {e}")
+        for chat_id, message_id in list(chat_messages.items()):
+            try:
+                bot.edit_message_text(text, chat_id, message_id, parse_mode="HTML")
+            except Exception as e:
+                print(f"Ошибка обновления в чате {chat_id}: {e}")
 
         time.sleep(60)
+
+@bot.message_handler(commands=["start"])
+def start(message):
+    chat_id = message.chat.id
+    text = "✈️ <b>До вылета в Таиланд осталось:</b>\n⏳ Загрузка таймера..."
+    try:
+        msg = bot.send_message(chat_id, text)
+        chat_messages[chat_id] = msg.message_id
+        bot.pin_chat_message(chat_id, msg.message_id, disable_notification=True)
+        bot.reply_to(message, "✅ Таймер запущен!")
+    except Exception as e:
+        bot.reply_to(message, f"Ошибка: {e}")
 
 def start_bot():
     t = threading.Thread(target=update_timer)
