@@ -1,0 +1,1 @@
+worker: python thailand_timer_bot.py
